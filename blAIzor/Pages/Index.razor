@@ -1,0 +1,46 @@
+﻿@page "/"
+@inject OpenAIClient _client;
+@inject IConfiguration _configuration;
+@using Azure.AI.OpenAI;
+@using Azure;
+@using Azure.Core;
+
+<PageTitle>AI with Blazor</PageTitle>
+
+<h1>AI with Blazor</h1>
+
+Ask GPT a question below.
+
+<input type="text" @bind-value="_prompt" style="width: 400px;" />
+<br/>
+<button class="btn btn-primary" @onclick="GetCompletions">Ask</button>
+<div>
+    @_completion
+</div>
+
+@code
+{
+    string _prompt = "What is Azure OpenAI?";
+    string _completion = string.Empty;
+
+    protected async Task GetCompletions() {
+        _completion = string.Empty;
+        StateHasChanged();
+
+        CompletionsOptions requestOptions = new CompletionsOptions() {
+                Prompt = { _prompt },
+                MaxTokens = 256
+            };
+
+        Response<Completions> completionsResponse = await _client.GetCompletionsAsync(
+            _configuration["OpenAIDeploymentName"],
+            requestOptions);
+
+        _completion = completionsResponse.Value.Choices[0].Text;
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized() {
+        GetCompletions();
+    }
+}
